@@ -3,7 +3,7 @@
   reminder: sys
   extra_params:
     extra_headers:
-      editor-version: Neovim/0.9.0
+      editor-version: Neovim/0.11.0
       Copilot-Integration-Id: vscode-chat
 
 - name: github_copilot/gpt-4
@@ -14,7 +14,7 @@
   reminder: sys
   extra_params:
     extra_headers:
-      editor-version: Neovim/0.9.0
+      editor-version: Neovim/0.11.0
       Copilot-Integration-Id: vscode-chat
 
 - name: github_copilot/gpt-4o
@@ -27,7 +27,7 @@
   system_prompt_prefix: "Formatting re-enabled. "
   extra_params:
     extra_headers:
-      editor-version: Neovim/0.9.0
+      editor-version: Neovim/0.11.0
       Copilot-Integration-Id: vscode-chat
 
 - name: github_copilot/gpt-4o-mini
@@ -36,7 +36,7 @@
   reminder: sys
   extra_params:
     extra_headers:
-      editor-version: Neovim/0.9.0
+      editor-version: Neovim/0.11.0
       Copilot-Integration-Id: vscode-chat
 
 - name: github_copilot/o1-ga
@@ -50,7 +50,7 @@
   system_prompt_prefix: "Formatting re-enabled. "
   extra_params:
     extra_headers:
-      editor-version: Neovim/0.9.0
+      editor-version: Neovim/0.11.0
       Copilot-Integration-Id: vscode-chat
 
 - name: github_copilot/o3-mini
@@ -63,7 +63,7 @@
   system_prompt_prefix: "Formatting re-enabled. "
   extra_params:
     extra_headers:
-      editor-version: Neovim/0.9.0
+      editor-version: Neovim/0.11.0
       Copilot-Integration-Id: vscode-chat
 
 - name: github_copilot/claude-3.5-sonnet
@@ -78,7 +78,7 @@
   editor_edit_format: editor-diff
   extra_params:
     extra_headers:
-      editor-version: Neovim/0.9.0
+      editor-version: Neovim/0.11.0
       Copilot-Integration-Id: vscode-chat
 
 - name: github_copilot/claude-3.7-sonnet
@@ -93,7 +93,7 @@
   editor_edit_format: editor-diff
   extra_params:
     extra_headers:
-      editor-version: Neovim/0.9.0
+      editor-version: Neovim/0.11.0
       Copilot-Integration-Id: vscode-chat
 
 - name: github_copilot/claude-3.7-sonnet-thought
@@ -108,7 +108,7 @@
   editor_edit_format: editor-diff
   extra_params:
     extra_headers:
-      editor-version: Neovim/0.9.0
+      editor-version: Neovim/0.11.0
       Copilot-Integration-Id: vscode-chat
 
 - name: github_copilot/gemini-2.0-flash
@@ -116,5 +116,5 @@
   use_repo_map: true
   extra_params:
     extra_headers:
-      editor-version: Neovim/0.9.0
+      editor-version: Neovim/0.11.0
       Copilot-Integration-Id: vscode-chat

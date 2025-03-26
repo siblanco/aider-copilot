@@ -84,7 +84,21 @@ Files loaded last will take priority.
 The yaml file should be a list of dictionary objects for each model.
 
 
-### Global extra params
+### Passing extra params to litellm.completion
+
+The `extra_params` attribute of model settings is used to pass arbitrary
+extra parameters to the `litellm.completion()` call when sending data
+to the given model.
+
+For example:
+
+```yaml
+- name: some-provider/my-special-model
+  extra_params:
+    extra_headers:
+      Custom-Header: value
+    max_tokens: 8192
+```
 
 You can use the special model name `aider/extra_params` to define 
 `extra_params` that will be passed to `litellm.completion()` for all models.
@@ -596,6 +610,10 @@ cog.out("```\n")
   edit_format: diff
   use_repo_map: true
 
+- name: gemini/gemini-2.5-pro-exp-03-25
+  edit_format: diff-fenced
+  use_repo_map: true
+
 - name: gemini/gemini-exp-1114
   edit_format: diff
   use_repo_map: true
@@ -984,6 +1002,10 @@ cog.out("```\n")
   editor_model_name: openrouter/deepseek/deepseek-r1:free
   editor_edit_format: editor-diff
 
+- name: openrouter/google/gemini-2.5-pro-exp-03-25:free
+  edit_format: diff-fenced
+  use_repo_map: true
+
 - name: openrouter/google/gemma-3-27b-it
   use_system_prompt: false
 
@@ -1124,6 +1146,10 @@ cog.out("```\n")
 
 - name: vertex_ai/claude-3-sonnet@20240229
   weak_model_name: vertex_ai/claude-3-5-haiku@20241022
+
+- name: vertex_ai/gemini-2.5-pro-exp-03-25
+  edit_format: diff-fenced
+  use_repo_map: true
 
 - name: vertex_ai/gemini-pro-experimental
   edit_format: diff-fenced

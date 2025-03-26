@@ -300,6 +300,10 @@ class TestCoder(unittest.TestCase):
                 "special_chars!@#.md",
             ]
 
+            # Pre-format the Windows path to avoid backslash issues in f-string expressions
+            windows_path = test_files[2].replace("/", "\\")
+            win_path3 = test_files[3].replace("/", "\\")
+
             for fname in test_files:
                 fpath = Path(fname)
                 fpath.parent.mkdir(parents=True, exist_ok=True)
@@ -325,7 +329,7 @@ class TestCoder(unittest.TestCase):
                 #    {test_files[1]},
                 # ),
                 # Files with Windows-style paths
-                (f"Edit the file {test_files[2].replace('/', '\\')}", {test_files[2]}),
+                (f"Edit the file {windows_path}", {test_files[2]}),
                 # Files with different quote styles
                 (f'Check "{test_files[5]}" now', {test_files[5]}),
                 # All files in one complex message
@@ -333,7 +337,7 @@ class TestCoder(unittest.TestCase):
                     (
                         f"First, edit `{test_files[0]}`. Then modify {test_files[1]}.\n"
                         f"```js\n// Update this file\nconst file = '{test_files[2]}';\n```\n"
-                        f"Finally check {test_files[3].replace('/', '\\')}"
+                        f"Finally check {win_path3}"
                     ),
                     {test_files[0], test_files[1], test_files[2], test_files[3]},
                 ),
@@ -344,7 +348,7 @@ class TestCoder(unittest.TestCase):
                     {test_files[1], test_files[2]},
                 ),
                 (
-                    f"The file **{test_files[3].replace('/', '\\')}** needs updating",
+                    f"The file **{win_path3}** needs updating",
                     {test_files[3]},
                 ),
                 (

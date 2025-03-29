@@ -24,6 +24,29 @@ cog.out(text)
 ]]]-->
 
 
+### main branch
+- Offer to OAuth against OpenRouter if no model and keys are provided.
+- Prioritize `gemini/gemini-2.5-pro-exp-03-25` if `GEMINI_API_KEY` is set, and `vertex_ai/gemini-2.5-pro-exp-03-25` if `VERTEXAI_PROJECT` is set, when no model is specified.
+- Select OpenRouter default model based on free/paid tier status if `OPENROUTER_API_KEY` is set and no model is specified.
+- Warn at startup if `--stream` and `--cache-prompts` are used together, as cost estimates may be inaccurate.
+- Boost repomap ranking for files whose path components match identifiers mentioned in the chat.
+- Change web scraping timeout from an error to a warning, allowing scraping to continue with potentially incomplete content.
+- Left-align markdown headings in the terminal output, by Peter Schilling.
+- Aider wrote 90% of the code in this release.
+
+### Aider v0.79.2
+
+- Added 'gemini' alias for gemini-2.5-pro model.
+- Updated Gemini 2.5 Pro max output tokens to 64k.
+- Added support for Lisp-style semicolon comments in file watcher, by Matteo Landi.
+- Added OpenRouter API error detection and retries.
+- Added openrouter/deepseek-chat-v3-0324 model.
+- Aider wrote 93% of the code in this release.
+
+### Aider v0.79.1
+
+- Improved model listing to include all models in fuzzy matching, including those provided by aider (not litellm).
+
 ### Aider v0.79.0
 
 - Added support for Gemini 2.5 Pro models.

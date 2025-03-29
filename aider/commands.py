@@ -1496,11 +1496,11 @@ class Commands:
 
         if not args.strip():
             # Display current value if no args are provided
-            formatted_budget = model.get_thinking_tokens(model)
+            formatted_budget = model.get_thinking_tokens()
             if formatted_budget is None:
                 self.io.tool_output("Thinking tokens are not currently set.")
             else:
-                budget = model.extra_params["thinking"].get("budget_tokens")
+                budget = model.get_raw_thinking_tokens()
                 self.io.tool_output(
                     f"Current thinking token budget: {budget:,} tokens ({formatted_budget})."
                 )
@@ -1509,8 +1509,8 @@ class Commands:
         value = args.strip()
         model.set_thinking_tokens(value)
 
-        formatted_budget = model.get_thinking_tokens(model)
-        budget = model.extra_params["thinking"].get("budget_tokens")
+        formatted_budget = model.get_thinking_tokens()
+        budget = model.get_raw_thinking_tokens()
 
         self.io.tool_output(f"Set thinking token budget to {budget:,} tokens ({formatted_budget}).")
         self.io.tool_output()
@@ -1525,7 +1525,7 @@ class Commands:
 
         if not args.strip():
             # Display current value if no args are provided
-            reasoning_value = model.get_reasoning_effort(model)
+            reasoning_value = model.get_reasoning_effort()
             if reasoning_value is None:
                 self.io.tool_output("Reasoning effort is not currently set.")
             else:
@@ -1534,7 +1534,7 @@ class Commands:
 
         value = args.strip()
         model.set_reasoning_effort(value)
-        reasoning_value = model.get_reasoning_effort(model)
+        reasoning_value = model.get_reasoning_effort()
         self.io.tool_output(f"Set reasoning effort to {reasoning_value}")
         self.io.tool_output()
 

@@ -410,6 +410,69 @@ def get_badges_html():
     return html
 
 
+def get_testimonials_js():
+    """
+    Extract testimonials from README.md and format them as JavaScript array
+    """
+    # Path to README.md, relative to this script
+    readme_path = os.path.join(
+        os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "README.md"
+    )
+
+    testimonials = []
+    in_testimonials_section = False
+
+    try:
+        with open(readme_path, "r", encoding="utf-8") as f:
+            for line in f:
+                # Check if we're entering the testimonials section
+                if line.strip() == "## Kind Words From Users":
+                    in_testimonials_section = True
+                    continue
+
+                # If we've hit another section after testimonials, stop
+                if in_testimonials_section and line.startswith("##"):
+                    break
+
+                # Process testimonial lines
+                if in_testimonials_section and line.strip().startswith('- *"'):
+                    # Extract the quote text: between *" and "*
+                    quote_match = line.split('*"')[1].split('"*')[0].strip()
+
+                    # Extract the author: between "— [" and "]"
+                    author_match = line.split("— [")[1].split("]")[0].strip()
+
+                    # Extract the link: between "(" and ")"
+                    link_match = line.split("](")[1].split(")")[0].strip()
+
+                    testimonials.append(
+                        {"text": quote_match, "author": author_match, "link": link_match}
+                    )
+
+        # Format as JavaScript array with script tags
+        if not testimonials:
+            return "<script>\nconst testimonials = [];\n</script>"
+
+        js_array = "<script>\nconst testimonials = [\n"
+        for i, t in enumerate(testimonials):
+            js_array += "    {\n"
+            js_array += f"        text: \"{t['text']}\",\n"
+            js_array += f"        author: \"{t['author']}\",\n"
+            js_array += f"        link: \"{t['link']}\"\n"
+            js_array += "    }"
+            if i < len(testimonials) - 1:
+                js_array += ","
+            js_array += "\n"
+        js_array += "];\n</script>"
+
+        return js_array
+
+    except Exception as e:
+        print(f"Error reading testimonials from README: {e}", file=sys.stderr)
+        # Return empty array as fallback
+        return "<script>\nconst testimonials = [];\n</script>"
+
+
 def main():
     # Load environment variables from .env file
     load_dotenv()

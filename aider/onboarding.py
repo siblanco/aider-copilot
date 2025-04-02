@@ -13,7 +13,6 @@ import requests
 
 from aider import urls
 from aider.io import InputOutput
-from aider.utils import check_pip_install_extra
 
 
 def check_openrouter_tier(api_key):
@@ -198,7 +197,8 @@ def exchange_code_for_key(code, code_verifier, io):
         return None
     except requests.exceptions.HTTPError as e:
         io.tool_error(
-            f"Error exchanging code for OpenRouter key: {e.status_code} {e.response.reason}"
+            "Error exchanging code for OpenRouter key:"
+            f" {e.response.status_code} {e.response.reason}"
         )
         io.tool_error(f"Response: {e.response.text}")
         return None
@@ -213,10 +213,6 @@ def exchange_code_for_key(code, code_verifier, io):
 # Function to start the OAuth flow
 def start_openrouter_oauth_flow(io, analytics):
     """Initiates the OpenRouter OAuth PKCE flow using a local server."""
-
-    # Check for requests library
-    if not check_pip_install_extra(io, "requests", "OpenRouter OAuth", "aider[oauth]"):
-        return None
 
     port = find_available_port()
     if not port:

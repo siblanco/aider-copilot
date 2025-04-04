@@ -2013,7 +2013,10 @@ class TestCommands(TestCase):
             # The actual call doesn't explicitly pass verbose=False, it relies on the default
             mock_run_cmd.assert_called_once_with("echo 'test'", error_print=io.tool_error, cwd=coder.root)
             # Check if output was added to chat (implicitly)
-            self.assertTrue(any("test output" in msg["content"] for msg in coder.cur_messages if msg["role"] == "user"))
+            user_messages = [msg for msg in coder.cur_messages if msg["role"] == "user"]
+            self.assertTrue(user_messages, "No user messages found in cur_messages after running command")
+            last_user_message = user_messages[-1]
+            self.assertIn("test output", last_user_message["content"], "Command output not found in the last user message")
 
 
     def test_cmd_reasoning_effort(self):

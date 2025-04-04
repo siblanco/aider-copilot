@@ -67,56 +67,56 @@ class TestLoopMode(unittest.TestCase):
             ]
 
             # Start the loop configuration via command
-            # Also patch coder.auto_commit to check if it's called
-            with patch.object(coder, 'auto_commit', return_value=("dummy_hash", "dummy commit message")) as mock_auto_commit:
-                commands.cmd_loop("")
+            commands.cmd_loop("")
 
-                # Assert loop state is configured
-                self.assertTrue(coder.loop_running)
+            # Assert loop state is configured
+            self.assertTrue(coder.loop_running)
             self.assertEqual(coder.loop_task, "Refactor this code")
             self.assertEqual(coder.loop_command, "python check_script.py")
             self.assertEqual(coder.loop_end_condition, "Does the output contain 'SUCCESS'?")
             self.assertTrue(coder.loop_auto_clear) # Check auto-clear setting
             self.assertTrue(coder.berserk_mode) # Loop enables berserk
 
-            # --- Simulate first iteration ---
-            coder.run_loop_iteration()
+            # Patch coder.auto_commit for the iterations
+            with patch.object(coder, 'auto_commit', return_value=("dummy_hash", "dummy commit message")) as mock_auto_commit:
+                # --- Simulate first iteration ---
+                coder.run_loop_iteration()
 
-            # Assertions for first iteration
-            mock_send_message.assert_called_with("Refactor this code")
-            mock_apply_updates.assert_called_with()  # Called after send_message
+                # Assertions for first iteration
+                mock_send_message.assert_called_with("Refactor this code")
+                mock_apply_updates.assert_called_with()  # Called after send_message
             mock_run_cmd.assert_called_with(
                 "python check_script.py", verbose=False, error_print=io.tool_error, cwd=coder.root
             )
-            # Assertions for first iteration's end condition check
-            # simple_send is only called for end condition check now (call 0)
-            mock_auto_commit.assert_called_once_with({'file1.py'}) # Check that auto_commit was called with edited files
-            mock_simple_send.assert_called_once() # Only end condition check
-            end_condition_call_args = mock_simple_send.call_args_list[0][0][0] # Args of the first call
-            self.assertEqual(end_condition_call_args[0]["role"], "user")
+                # Assertions for first iteration's end condition check
+                # simple_send is only called for end condition check now (call 0)
+                mock_auto_commit.assert_called_once_with({'file1.py'}) # Check that auto_commit was called with edited files
+                mock_simple_send.assert_called_once() # Only end condition check
+                end_condition_call_args = mock_simple_send.call_args_list[0][0][0] # Args of the first call
+                self.assertEqual(end_condition_call_args[0]["role"], "user")
             self.assertIn("Output without SUCCESS", end_condition_call_args[0]["content"])
             self.assertIn("Does the output contain 'SUCCESS'?", end_condition_call_args[0]["content"])
-            self.assertTrue(coder.loop_running) # Loop should continue
-            self.assertEqual(coder.loop_iteration, 1)
+                self.assertTrue(coder.loop_running) # Loop should continue
+                self.assertEqual(coder.loop_iteration, 1)
 
-            # --- Simulate second iteration ---
-            # Reset mocks for the second iteration's commit and end condition check
-            mock_auto_commit.reset_mock()
-            mock_simple_send.reset_mock()
-            coder.run_loop_iteration()
+                # --- Simulate second iteration ---
+                # Reset mocks for the second iteration's commit and end condition check
+                mock_auto_commit.reset_mock()
+                mock_simple_send.reset_mock()
+                coder.run_loop_iteration()
 
-            # Assertions for second iteration
-            self.assertEqual(mock_send_message.call_count, 2)  # Task sent twice
-            self.assertEqual(mock_apply_updates.call_count, 2) # Updates applied twice
-            self.assertEqual(mock_run_cmd.call_count, 2)       # Command run twice
-            self.assertEqual(mock_auto_commit.call_count, 1)   # Auto-commit called once in 2nd iter
-            self.assertEqual(mock_simple_send.call_count, 1)   # End check called once in 2nd iter
+                # Assertions for second iteration
+                self.assertEqual(mock_send_message.call_count, 2)  # Task sent twice
+                self.assertEqual(mock_apply_updates.call_count, 2) # Updates applied twice
+                self.assertEqual(mock_run_cmd.call_count, 2)       # Command run twice
+                self.assertEqual(mock_auto_commit.call_count, 1)   # Auto-commit called once in 2nd iter
+                self.assertEqual(mock_simple_send.call_count, 1)   # End check called once in 2nd iter
 
-            # Check the second end condition call (1st call in 2nd iter)
-            end_condition_call_args_2 = mock_simple_send.call_args_list[0][0][0]
-            self.assertIn("Output with SUCCESS", end_condition_call_args_2[0]["content"])
-            self.assertFalse(coder.loop_running)  # Loop should stop
-            self.assertEqual(coder.loop_iteration, 2)
+                # Check the second end condition call (1st call in 2nd iter)
+                end_condition_call_args_2 = mock_simple_send.call_args_list[0][0][0]
+                self.assertIn("Output with SUCCESS", end_condition_call_args_2[0]["content"])
+                self.assertFalse(coder.loop_running)  # Loop should stop
+                self.assertEqual(coder.loop_iteration, 2)
 
     @patch("aider.coders.base_coder.Coder.send_message")
     @patch("aider.coders.base_coder.Coder.apply_updates")

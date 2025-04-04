@@ -147,8 +147,6 @@ class TestLoopMode(unittest.TestCase):
             with patch("aider.main.Coder.create") as mock_coder_create:
                 mock_coder_instance = MagicMock()
                 mock_coder_instance.loop_running = False  # Start as not running
-                # Create Commands *inside* the patch context using the mock coder
-                mock_coder_instance.commands = Commands(io, mock_coder_instance)
                 # Mock start_loop to check if it's called
                 mock_coder_instance.start_loop = MagicMock()
                 mock_coder_create.return_value = mock_coder_instance

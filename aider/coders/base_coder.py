@@ -331,6 +331,7 @@ class Coder:
         auto_accept_architect=True,
         berserk_mode=False,
         loop=False, # Add loop argument
+        loop_auto_clear=False, # Add loop_auto_clear argument
     ):
         # Fill in a dummy Analytics if needed, but it is never .enable()'d
         self.analytics = analytics if analytics is not None else Analytics()
@@ -339,7 +340,7 @@ class Coder:
         self.event = self.analytics.event
         self.chat_language = chat_language
         self.loop_running = loop # Initialize loop status from argument
-        self.loop_auto_clear = False # Initialize auto-clear status
+        self.loop_auto_clear = loop_auto_clear # Initialize auto-clear status from argument
         self.commit_before_message = []
         self.aider_commit_hashes = set()
         self.rejected_urls = set()

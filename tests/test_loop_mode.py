@@ -35,7 +35,9 @@ class TestLoopMode(unittest.TestCase):
             # Create and commit file1.py so auto_commit works
             file1_path = Path(temp_dir) / "file1.py"
             file1_path.write_text("initial content")
-            coder.repo.repo.index.add([str(file1_path)])
+            # Use relative path for adding to git index
+            relative_file_path = file1_path.relative_to(coder.root)
+            coder.repo.repo.index.add([str(relative_file_path)])
             coder.repo.repo.index.commit("add file1.py")
 
             # Mock user inputs for loop configuration

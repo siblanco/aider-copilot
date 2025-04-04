@@ -26,11 +26,17 @@ class TestLoopMode(unittest.TestCase):
         mock_apply_updates,
         mock_send_message,
     ):
-        with GitTemporaryDirectory():
+        with GitTemporaryDirectory() as temp_dir:
             # Setup IO and Coder
             io = InputOutput(pretty=False, yes=True) # Use yes=True for auto-apply
             coder = Coder.create(self.GPT35, "diff", io=io)
             commands = Commands(io, coder)
+
+            # Create and commit file1.py so auto_commit works
+            file1_path = Path(temp_dir) / "file1.py"
+            file1_path.write_text("initial content")
+            coder.repo.repo.index.add([str(file1_path)])
+            coder.repo.repo.index.commit("add file1.py")
 
             # Mock user inputs for loop configuration
             io.prompt_ask = MagicMock(
@@ -45,8 +51,13 @@ class TestLoopMode(unittest.TestCase):
             # Mock LLM responses
             # 1. Initial task response (suggests edits)
             mock_send_message.return_value = iter([]) # Simulate no streaming output needed for test
-            # 2. End condition check response (NO first, then YES)
-            mock_simple_send.side_effect = ["NO", "YES"]
+            # 2. Commit message, End condition check (NO), Commit message, End condition check (YES)
+            mock_simple_send.side_effect = [
+                "feat: Refactor code", # Commit msg 1
+                "NO",                  # End condition check 1
+                "fix: Address feedback", # Commit msg 2
+                "YES",                 # End condition check 2
+            ]
 
             # Mock apply_updates to return edited files
             mock_apply_updates.return_value = {"file1.py"}
@@ -77,14 +88,12 @@ class TestLoopMode(unittest.TestCase):
             mock_run_cmd.assert_called_with(
                 "python check_script.py", verbose=False, error_print=io.tool_error, cwd=coder.root
             )
-            mock_simple_send.assert_called_with(
-                [{"role": "user", "content": mock.ANY}]  # Check end condition prompt
-            )
-            self.assertIn("Output without SUCCESS", mock_simple_send.call_args[0][0][0]["content"])
-            self.assertIn(
-                "Does the output contain 'SUCCESS'?",
-                mock_simple_send.call_args[0][0][0]["content"],
-            )
+            # Assertions for first iteration's end condition check
+            # simple_send is called for commit msg (call 1) and end condition (call 2)
+            end_condition_call_args = mock_simple_send.call_args_list[1][0][0] # Args of the second call
+            self.assertEqual(end_condition_call_args[0]["role"], "user")
+            self.assertIn("Output without SUCCESS", end_condition_call_args[0]["content"])
+            self.assertIn("Does the output contain 'SUCCESS'?", end_condition_call_args[0]["content"])
             self.assertTrue(coder.loop_running) # Loop should continue
             self.assertEqual(coder.loop_iteration, 1)
 
@@ -92,11 +101,15 @@ class TestLoopMode(unittest.TestCase):
             coder.run_loop_iteration()
 
             # Assertions for second iteration
-            self.assertEqual(mock_send_message.call_count, 2)
-            self.assertEqual(mock_apply_updates.call_count, 2)
-            self.assertEqual(mock_run_cmd.call_count, 2)
-            self.assertEqual(mock_simple_send.call_count, 2)
-            self.assertIn("Output with SUCCESS", mock_simple_send.call_args[0][0][0]["content"])
+            # Assertions for second iteration
+            self.assertEqual(mock_send_message.call_count, 2) # Task sent twice
+            self.assertEqual(mock_apply_updates.call_count, 2) # Updates applied twice
+            self.assertEqual(mock_run_cmd.call_count, 2)       # Command run twice
+            self.assertEqual(mock_simple_send.call_count, 4)   # Commit msg + End check, twice
+
+            # Check the second end condition call (4th call overall)
+            end_condition_call_args_2 = mock_simple_send.call_args_list[3][0][0]
+            self.assertIn("Output with SUCCESS", end_condition_call_args_2[0]["content"])
             self.assertFalse(coder.loop_running)  # Loop should stop
             self.assertEqual(coder.loop_iteration, 2)
 
@@ -143,13 +156,25 @@ class TestLoopMode(unittest.TestCase):
                 ]
             )
 
-            # Mock Coder.create and its run method to prevent actual execution
-            with patch("aider.main.Coder.create") as mock_coder_create:
+            # Mock Coder.create and Commands within aider.main
+            with patch("aider.main.Coder.create") as mock_coder_create, \
+                 patch("aider.main.Commands") as mock_commands_class:
+
                 mock_coder_instance = MagicMock()
                 mock_coder_instance.loop_running = False  # Start as not running
-                # Mock start_loop to check if it's called
                 mock_coder_instance.start_loop = MagicMock()
                 mock_coder_create.return_value = mock_coder_instance
+
+                # Configure the mock Commands instance that main will create
+                mock_commands_instance = MagicMock()
+                # Link the mock coder to the mock commands instance
+                mock_commands_instance.coder = mock_coder_instance
+                # Make cmd_loop available on the mock commands instance
+                # We need the *real* cmd_loop logic for the test prompts
+                real_commands = Commands(io, mock_coder_instance)
+                mock_commands_instance.cmd_loop = real_commands.cmd_loop
+                mock_commands_class.return_value = mock_commands_instance
+
 
                 # Call main with --loop argument
                 from aider.main import main
@@ -158,7 +183,8 @@ class TestLoopMode(unittest.TestCase):
 
                 # Assert prompt_ask was called 4 times for configuration
                 self.assertEqual(io.prompt_ask.call_count, 4)
-                # Assert start_loop was called on the coder instance
+                # Assert start_loop was called on the *mock coder instance*
+                # (which was linked to the mock commands instance)
                 mock_coder_instance.start_loop.assert_called_once_with(
                     "Initial Task", "initial command", "initial end condition", True # auto_clear=True
                 )

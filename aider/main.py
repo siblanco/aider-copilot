@@ -1068,6 +1068,17 @@ def main(argv=None, input=None, output=None, force_git_root=None, return_coder=F
     if args.load:
         commands.cmd_load(args.load)
 
+    if args.loop:
+        # If --loop is specified, immediately start the loop configuration
+        # The first iteration's task will be returned by cmd_loop
+        initial_task = commands.cmd_loop("")
+        if initial_task:
+            args.message = initial_task # Use the configured task as the first message
+        else:
+            # Loop configuration failed or was cancelled
+            analytics.event("exit", reason="Loop configuration failed")
+            return 1
+
     if args.message:
         io.add_to_input_history(args.message)
         io.tool_output()

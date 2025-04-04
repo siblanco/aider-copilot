@@ -329,13 +329,15 @@ class Coder:
         auto_copy_context=False,
         auto_accept_architect=True,
         berserk_mode=False,
+        loop=False, # Add loop argument
     ):
         # Fill in a dummy Analytics if needed, but it is never .enable()'d
         self.analytics = analytics if analytics is not None else Analytics()
-        self.berserk_mode = berserk_mode
+        self.berserk_mode = berserk_mode or loop # Loop implies berserk mode for auto-applying edits
 
         self.event = self.analytics.event
         self.chat_language = chat_language
+        self.loop_running = loop # Initialize loop status from argument
         self.commit_before_message = []
         self.aider_commit_hashes = set()
         self.rejected_urls = set()

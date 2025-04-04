@@ -35,9 +35,10 @@ class TestLoopMode(unittest.TestCase):
             # Mock user inputs for loop configuration
             io.prompt_ask = MagicMock(
                 side_effect=[
-                    "Refactor this code",  # Task
-                    "python check_script.py",  # Command
-                    "Does the output contain 'SUCCESS'?",  # End condition
+                    "Refactor this code",             # Task
+                    "python check_script.py",         # Command
+                    "Does the output contain 'SUCCESS'?", # End condition
+                    "yes",                            # Auto-clear
                 ]
             )
 
@@ -64,6 +65,7 @@ class TestLoopMode(unittest.TestCase):
             self.assertEqual(coder.loop_task, "Refactor this code")
             self.assertEqual(coder.loop_command, "python check_script.py")
             self.assertEqual(coder.loop_end_condition, "Does the output contain 'SUCCESS'?")
+            self.assertTrue(coder.loop_auto_clear) # Check auto-clear setting
             self.assertTrue(coder.berserk_mode) # Loop enables berserk
 
             # --- Simulate first iteration ---
@@ -137,6 +139,7 @@ class TestLoopMode(unittest.TestCase):
                     "Initial Task",
                     "initial command",
                     "initial end condition",
+                    "yes", # Auto-clear
                 ]
             )
 
@@ -155,11 +158,11 @@ class TestLoopMode(unittest.TestCase):
 
                 main(["--loop", "--exit"])  # --exit prevents entering the main loop
 
-                # Assert prompt_ask was called 3 times for configuration
-                self.assertEqual(io.prompt_ask.call_count, 3)
+                # Assert prompt_ask was called 4 times for configuration
+                self.assertEqual(io.prompt_ask.call_count, 4)
                 # Assert start_loop was called on the coder instance
                 mock_coder_instance.start_loop.assert_called_once_with(
-                    "Initial Task", "initial command", "initial end condition"
+                    "Initial Task", "initial command", "initial end condition", True # auto_clear=True
                 )
 
 

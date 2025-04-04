@@ -116,6 +116,7 @@ class Coder:
     loop_end_condition = None
     loop_running = False
     loop_iteration = 0
+    loop_auto_clear = False
 
     @classmethod
     def create(
@@ -338,6 +339,7 @@ class Coder:
         self.event = self.analytics.event
         self.chat_language = chat_language
         self.loop_running = loop # Initialize loop status from argument
+        self.loop_auto_clear = False # Initialize auto-clear status
         self.commit_before_message = []
         self.aider_commit_hashes = set()
         self.rejected_urls = set()
@@ -838,6 +840,11 @@ class Coder:
     def run_stream(self, user_message):
         self.io.user_input(user_message)
         self.init_before_message()
+
+        # Clear history if loop_auto_clear is enabled and it's not the first iteration
+        if self.loop_running and self.loop_auto_clear and self.loop_iteration > 0:
+            self.clear_history_for_loop()
+
         yield from self.send_message(user_message)
 
     def init_before_message(self):
@@ -860,6 +867,7 @@ class Coder:
         self.loop_running = True
         self.loop_iteration = 0
         # Loop implies auto-applying edits and auto-adding command output
+        self.loop_auto_clear = auto_clear
         self.berserk_mode = True
         self.io.berserk_mode = True
 
@@ -867,9 +875,12 @@ class Coder:
         """Stop the loop mode."""
         self.loop_task = None
         self.loop_command = None
+        self.loop_task = None
+        self.loop_command = None
         self.loop_end_condition = None
         self.loop_running = False
         self.loop_iteration = 0
+        self.loop_auto_clear = False
         # Restore original berserk mode state if needed (though loop usually exits)
         # self.berserk_mode = self.original_kwargs.get('berserk_mode', False)
         # self.io.berserk_mode = self.berserk_mode
@@ -949,6 +960,37 @@ Reply with only "YES" or "NO".
         else:
             self.io.tool_output("End condition not met. Continuing loop.")
             # The main run loop will call run_loop_iteration again if loop_running is true
+
+    def clear_history_for_loop(self):
+        """Clears chat history, keeping only the last command output messages."""
+        if not self.cur_messages or len(self.cur_messages) < 2:
+            # Nothing to preserve or not enough messages
+            self.done_messages = []
+            self.cur_messages = []
+            return
+
+        # Find the last assistant message (should be "Ok.")
+        last_assistant_msg_index = -1
+        if self.cur_messages[-1].get("role") == "assistant":
+            last_assistant_msg_index = len(self.cur_messages) - 1
+
+        # Find the user message before that (should be command output)
+        last_user_msg_index = -1
+        if last_assistant_msg_index > 0 and self.cur_messages[-2].get("role") == "user":
+             last_user_msg_index = len(self.cur_messages) - 2
+
+        if last_user_msg_index != -1 and last_assistant_msg_index != -1:
+            # Preserve the last two messages (command output + Ok)
+            preserved_messages = self.cur_messages[last_user_msg_index:]
+            self.done_messages = [] # Clear done messages completely
+            self.cur_messages = preserved_messages
+            self.io.tool_output("Auto-cleared chat history for loop iteration.")
+        else:
+            # Couldn't find the expected pattern, clear everything as a fallback
+            self.done_messages = []
+            self.cur_messages = []
+            self.io.tool_warning("Could not preserve last command output, cleared entire history.")
+
 
     def run(self, with_message=None, preproc=True):
         try:

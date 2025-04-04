@@ -1548,7 +1548,10 @@ class Commands:
             self.io.tool_error("End condition cannot be empty.")
             return
 
-        self.coder.start_loop(task, command, end_condition)
+        auto_clear_input = self.io.prompt_ask("Auto-clear chat history before each iteration? (yes/no):").lower()
+        auto_clear = auto_clear_input.startswith('y')
+
+        self.coder.start_loop(task, command, end_condition, auto_clear)
         self.io.tool_output("Loop configured. Starting the first iteration...")
         # Trigger the first iteration by returning the task
         # The main loop in Coder will handle the rest

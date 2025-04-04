@@ -645,6 +645,12 @@ def get_parser(default_config_files, git_root):
         help="Print the system prompts and exit (debug)",
         default=False,
     )
+    group.add_argument(
+        "--loop",
+        action="store_true",
+        help="Run aider in a loop with a fixed command and termination condition",
+        default=False,
+    )
 
     ##########
     group = parser.add_argument_group("Voice settings")

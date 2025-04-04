@@ -1104,10 +1104,25 @@ def main(argv=None, input=None, output=None, force_git_root=None, return_coder=F
     while True:
         try:
             coder.ok_to_warm_cache = bool(args.cache_keepalive_pings)
-            coder.run()
-            analytics.event("exit", reason="Completed main CLI coder.run")
-            return
+            # Check if we should continue the loop or ask for input
+            if coder.loop_running:
+                coder.run_loop_iteration()
+                if not coder.loop_running: # Check if loop exited during iteration
+                    coder.io.tool_output("Loop finished.")
+                    # Fall through to potentially ask for next input or exit
+            else:
+                # Normal interactive mode or loop finished, ask for input
+                coder.ok_to_warm_cache = bool(args.cache_keepalive_pings)
+                coder.run() # This will call get_input()
+                analytics.event("exit", reason="Completed main CLI coder.run")
+                return
+
         except SwitchCoder as switch:
+            # Handle coder switching, potentially interrupting the loop
+            if coder.loop_running:
+                coder.stop_loop() # Stop the loop if we switch coders
+                coder.io.tool_warning("Loop interrupted due to coder switch.")
+
             coder.ok_to_warm_cache = False
 
             # Set the placeholder if provided

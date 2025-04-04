@@ -111,6 +111,11 @@ class Coder:
     ignore_mentions = None
     chat_language = None
     file_watcher = None
+    loop_task = None
+    loop_command = None
+    loop_end_condition = None
+    loop_running = False
+    loop_iteration = 0
 
     @classmethod
     def create(
@@ -852,14 +857,22 @@ class Coder:
                 self.run_one(with_message, preproc)
                 return self.partial_response_content
             while True:
-                try:
-                    if not self.io.placeholder:
-                        self.copy_context()
-                    user_message = self.get_input()
-                    self.run_one(user_message, preproc)
-                    self.show_undo_hint()
-                except KeyboardInterrupt:
-                    self.keyboard_interrupt()
+                if self.loop_running:
+                    # If in loop mode, run an iteration instead of asking for input
+                    self.run_loop_iteration()
+                    if not self.loop_running: # Check if loop exited
+                        self.io.tool_output("Loop finished.")
+                        continue # Go back to asking for user input
+                else:
+                    # Normal interactive mode
+                    try:
+                        if not self.io.placeholder:
+                            self.copy_context()
+                        user_message = self.get_input()
+                        self.run_one(user_message, preproc)
+                        self.show_undo_hint()
+                    except KeyboardInterrupt:
+                        self.keyboard_interrupt()
         except EOFError:
             return
 

@@ -1527,6 +1527,41 @@ class Commands:
         else:
             self.io.tool_error("Usage: /berserk <on|off>")
 
+    def cmd_loop(self, args):
+        "Configure and run aider in a loop"
+        if self.coder.loop_running:
+            self.io.tool_error("Loop is already running. Use /exitloop to stop.")
+            return
+
+        task = self.io.prompt_ask("Enter the task for the loop:")
+        if not task:
+            self.io.tool_error("Task cannot be empty.")
+            return
+
+        command = self.io.prompt_ask("Enter the command to run after each iteration:")
+        if not command:
+            self.io.tool_error("Command cannot be empty.")
+            return
+
+        end_condition = self.io.prompt_ask("Enter the end condition prompt for the loop:")
+        if not end_condition:
+            self.io.tool_error("End condition cannot be empty.")
+            return
+
+        self.coder.start_loop(task, command, end_condition)
+        self.io.tool_output("Loop configured. Starting the first iteration...")
+        # Trigger the first iteration by returning the task
+        # The main loop in Coder will handle the rest
+        return task
+
+    def cmd_exitloop(self, args):
+        "Exit the current loop mode"
+        if not self.coder.loop_running:
+            self.io.tool_error("Not currently in loop mode.")
+            return
+        self.coder.stop_loop()
+        self.io.tool_output("Exited loop mode.")
+
     def cmd_think_tokens(self, args):
         "Set the thinking token budget (supports formats like 8096, 8k, 10.5k, 0.5M)"
         model = self.coder.main_model

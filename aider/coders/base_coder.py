@@ -2097,12 +2097,15 @@ class Coder:
             self.check_added_files()
             return True
 
-        if not self.io.confirm_ask(
+        if not self.berserk_mode and not self.io.confirm_ask(
             "Allow edits to file that has not been added to the chat?",
             subject=path,
         ):
             self.io.tool_output(f"Skipping edits to {path}")
             return
+
+        if self.berserk_mode:
+            self.io.tool_output(f"Berserk mode: Auto-allowing edits to file: {path}")
 
         if need_to_add:
             self.repo.repo.git.add(full_path)

@@ -1954,6 +1954,64 @@ class TestCommands(TestCase):
             self.assertEqual(len(coder.cur_messages), 0)
             self.assertEqual(len(coder.done_messages), 0)
 
+    def test_cmd_berserk(self):
+        io = InputOutput(pretty=False, fancy_input=False, yes=True)
+        coder = Coder.create(self.GPT35, None, io)
+        commands = Commands(io, coder)
+
+        # Initial state should be False
+        self.assertFalse(commands.berserk_mode)
+        self.assertFalse(coder.berserk_mode)
+        self.assertFalse(io.berserk_mode)
+
+        # Enable berserk mode
+        commands.cmd_berserk("on")
+        self.assertTrue(commands.berserk_mode)
+        self.assertTrue(coder.berserk_mode)
+        self.assertTrue(io.berserk_mode)
+
+        # Disable berserk mode
+        commands.cmd_berserk("off")
+        self.assertFalse(commands.berserk_mode)
+        self.assertFalse(coder.berserk_mode)
+        self.assertFalse(io.berserk_mode)
+
+        # Test invalid argument
+        with mock.patch.object(io, "tool_error") as mock_tool_error:
+            commands.cmd_berserk("invalid")
+            mock_tool_error.assert_called_once_with("Usage: /berserk <on|off>")
+            self.assertFalse(commands.berserk_mode) # State should remain unchanged
+
+    def test_berserk_mode_auto_accepts(self):
+        io = InputOutput(pretty=False, fancy_input=False, yes=False) # yes=False to test auto-accept
+        coder = Coder.create(self.GPT35, None, io, berserk_mode=True)
+        commands = Commands(io, coder, berserk_mode=True)
+
+        # Test confirm_ask in berserk mode
+        self.assertTrue(io.confirm_ask("Should this be auto-accepted?"))
+
+        # Test auto-adding files mentioned by LLM
+        with mock.patch.object(io, "tool_output") as mock_tool_output:
+            coder.check_for_file_mentions("Please add file1.txt and dir/file2.py")
+            self.assertIn(str(Path("file1.txt").resolve()), coder.abs_fnames)
+            self.assertIn(str(Path("dir/file2.py").resolve()), coder.abs_fnames)
+            mock_tool_output.assert_any_call("Berserk mode: Auto-adding file: file1.txt")
+            mock_tool_output.assert_any_call("Berserk mode: Auto-adding file: dir/file2.py")
+
+        # Test auto-allowing edits to files not in chat
+        self.assertTrue(coder.allowed_to_edit("new_file.txt"))
+        self.assertTrue(Path("new_file.txt").exists()) # File should be created
+
+        # Test auto-running shell commands
+        coder.shell_commands = ["echo 'test'"]
+        with mock.patch("aider.coders.base_coder.run_cmd") as mock_run_cmd:
+            mock_run_cmd.return_value = (0, "test output")
+            coder.run_shell_commands()
+            mock_run_cmd.assert_called_once_with("echo 'test'", verbose=False, error_print=io.tool_error, cwd=coder.root)
+            # Check if output was added to chat (implicitly)
+            self.assertTrue(any("test output" in msg["content"] for msg in coder.cur_messages if msg["role"] == "user"))
+
+
     def test_cmd_reasoning_effort(self):
         io = InputOutput(pretty=False, fancy_input=False, yes=True)
         coder = Coder.create(self.GPT35, None, io)

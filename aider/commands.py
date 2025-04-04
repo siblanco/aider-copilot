@@ -1511,6 +1511,22 @@ class Commands:
         "Alias for /editor: Open an editor to write a prompt"
         return self.cmd_editor(args)
 
+    def cmd_berserk(self, args):
+        "Enable or disable berserk mode (auto-accept all actions)"
+        arg = args.strip().lower()
+        if arg == "on":
+            self.berserk_mode = True
+            self.coder.berserk_mode = True  # Propagate to coder
+            self.io.berserk_mode = True     # Propagate to io
+            self.io.tool_output("Berserk mode enabled: All actions will be auto-accepted.")
+        elif arg == "off":
+            self.berserk_mode = False
+            self.coder.berserk_mode = False # Propagate to coder
+            self.io.berserk_mode = False    # Propagate to io
+            self.io.tool_output("Berserk mode disabled.")
+        else:
+            self.io.tool_error("Usage: /berserk <on|off>")
+
     def cmd_think_tokens(self, args):
         "Set the thinking token budget (supports formats like 8096, 8k, 10.5k, 0.5M)"
         model = self.coder.main_model

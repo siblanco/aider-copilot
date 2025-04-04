@@ -1991,10 +1991,13 @@ class TestCommands(TestCase):
         self.assertTrue(io.confirm_ask("Should this be auto-accepted?"))
 
         # Test auto-adding files mentioned by LLM
-        with mock.patch.object(io, "tool_output") as mock_tool_output:
+        # Mock get_all_relative_files because the test doesn't set up a repo or initial files
+        with mock.patch.object(io, "tool_output") as mock_tool_output, \
+             mock.patch.object(coder, "get_all_relative_files", return_value={"file1.txt", "dir/file2.py", "other.txt"}):
             coder.check_for_file_mentions("Please add file1.txt and dir/file2.py")
-            self.assertIn(str(Path("file1.txt").resolve()), coder.abs_fnames)
-            self.assertIn(str(Path("dir/file2.py").resolve()), coder.abs_fnames)
+            # Use coder.abs_root_path to ensure paths are resolved relative to coder's root
+            self.assertIn(str(coder.abs_root_path("file1.txt")), coder.abs_fnames)
+            self.assertIn(str(coder.abs_root_path("dir/file2.py")), coder.abs_fnames)
             mock_tool_output.assert_any_call("Berserk mode: Auto-adding file: file1.txt")
             mock_tool_output.assert_any_call("Berserk mode: Auto-adding file: dir/file2.py")
 

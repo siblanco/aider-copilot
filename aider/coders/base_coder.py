@@ -852,6 +852,104 @@ class Coder:
         if self.repo:
             self.commit_before_message.append(self.repo.get_head_commit_sha())
 
+    def start_loop(self, task, command, end_condition):
+        """Configure and start the loop mode."""
+        self.loop_task = task
+        self.loop_command = command
+        self.loop_end_condition = end_condition
+        self.loop_running = True
+        self.loop_iteration = 0
+        # Loop implies auto-applying edits and auto-adding command output
+        self.berserk_mode = True
+        self.io.berserk_mode = True
+
+    def stop_loop(self):
+        """Stop the loop mode."""
+        self.loop_task = None
+        self.loop_command = None
+        self.loop_end_condition = None
+        self.loop_running = False
+        self.loop_iteration = 0
+        # Restore original berserk mode state if needed (though loop usually exits)
+        # self.berserk_mode = self.original_kwargs.get('berserk_mode', False)
+        # self.io.berserk_mode = self.berserk_mode
+
+    def run_loop_iteration(self):
+        """Runs a single iteration of the loop."""
+        if not self.loop_running or not self.loop_task:
+            return
+
+        self.loop_iteration += 1
+        self.io.tool_output(f"\n--- Loop Iteration {self.loop_iteration} ---")
+        self.io.tool_output(f"Task: {self.loop_task}")
+
+        # 1. Send the task to the LLM and apply edits
+        list(self.send_message(self.loop_task)) # Discard generator output for now
+        edited_files = self.apply_updates() # Edits are auto-applied because berserk_mode is True
+
+        if edited_files:
+            self.io.tool_output(f"Applied edits to: {', '.join(edited_files)}")
+            # Auto-commit if enabled
+            self.auto_commit(edited_files)
+        else:
+            self.io.tool_output("LLM did not suggest any edits.")
+
+        # 2. Execute the command
+        if not self.loop_command:
+            self.io.tool_error("Loop command is not set.")
+            self.stop_loop()
+            return
+
+        self.io.tool_output(f"Running command: {self.loop_command}")
+        exit_status, command_output = run_cmd(
+            self.loop_command,
+            verbose=self.verbose,
+            error_print=self.io.tool_error,
+            cwd=self.root
+        )
+        self.io.tool_output(f"Command finished with exit code {exit_status}.")
+        if command_output:
+            self.io.tool_output("Command output:")
+            self.io.tool_output(command_output)
+            # Automatically add command output to chat history
+            output_message = prompts.run_output.format(
+                command=self.loop_command,
+                output=command_output,
+            )
+            self.cur_messages += [
+                dict(role="user", content=output_message),
+                dict(role="assistant", content="Ok."),
+            ]
+        else:
+            self.io.tool_output("Command produced no output.")
+            command_output = "" # Ensure it's a string
+
+        # 3. Check the end condition
+        if not self.loop_end_condition:
+            self.io.tool_error("Loop end condition is not set.")
+            self.stop_loop()
+            return
+
+        end_check_prompt = f"""Given the following command output:
+```
+{command_output}
+```
+Does this output satisfy the end condition: "{self.loop_end_condition}"?
+Reply with only "YES" or "NO".
+"""
+        self.io.tool_output("Checking end condition...")
+        # Use a simple send, maybe weak model is fine?
+        end_check_response = self.main_model.simple_send_with_retries(
+            [{"role": "user", "content": end_check_prompt}]
+        )
+
+        if end_check_response and "YES" in end_check_response.upper():
+            self.io.tool_output("End condition met. Exiting loop.")
+            self.stop_loop()
+        else:
+            self.io.tool_output("End condition not met. Continuing loop.")
+            # The main run loop will call run_loop_iteration again if loop_running is true
+
     def run(self, with_message=None, preproc=True):
         try:
             if with_message:

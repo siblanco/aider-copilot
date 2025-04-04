@@ -2010,7 +2010,8 @@ class TestCommands(TestCase):
         with mock.patch("aider.coders.base_coder.run_cmd") as mock_run_cmd:
             mock_run_cmd.return_value = (0, "test output")
             coder.run_shell_commands()
-            mock_run_cmd.assert_called_once_with("echo 'test'", verbose=False, error_print=io.tool_error, cwd=coder.root)
+            # The actual call doesn't explicitly pass verbose=False, it relies on the default
+            mock_run_cmd.assert_called_once_with("echo 'test'", error_print=io.tool_error, cwd=coder.root)
             # Check if output was added to chat (implicitly)
             self.assertTrue(any("test output" in msg["content"] for msg in coder.cur_messages if msg["role"] == "user"))
 

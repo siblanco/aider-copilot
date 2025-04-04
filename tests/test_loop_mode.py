@@ -1,6 +1,7 @@
 import os
 import unittest
 from pathlib import Path
+from unittest import mock
 from unittest.mock import MagicMock, patch
 
 from aider.coders import Coder
@@ -70,15 +71,18 @@ class TestLoopMode(unittest.TestCase):
 
             # Assertions for first iteration
             mock_send_message.assert_called_with("Refactor this code")
-            mock_apply_updates.assert_called_with() # Called after send_message
+            mock_apply_updates.assert_called_with()  # Called after send_message
             mock_run_cmd.assert_called_with(
                 "python check_script.py", verbose=False, error_print=io.tool_error, cwd=coder.root
             )
             mock_simple_send.assert_called_with(
-                [{"role": "user", "content": mock.ANY}] # Check end condition prompt
+                [{"role": "user", "content": mock.ANY}]  # Check end condition prompt
             )
-            self.assertIn("Output without SUCCESS", mock_simple_send.call_args[0][0][0]['content'])
-            self.assertIn("Does the output contain 'SUCCESS'?", mock_simple_send.call_args[0][0][0]['content'])
+            self.assertIn("Output without SUCCESS", mock_simple_send.call_args[0][0][0]["content"])
+            self.assertIn(
+                "Does the output contain 'SUCCESS'?",
+                mock_simple_send.call_args[0][0][0]["content"],
+            )
             self.assertTrue(coder.loop_running) # Loop should continue
             self.assertEqual(coder.loop_iteration, 1)
 
@@ -90,8 +94,8 @@ class TestLoopMode(unittest.TestCase):
             self.assertEqual(mock_apply_updates.call_count, 2)
             self.assertEqual(mock_run_cmd.call_count, 2)
             self.assertEqual(mock_simple_send.call_count, 2)
-            self.assertIn("Output with SUCCESS", mock_simple_send.call_args[0][0][0]['content'])
-            self.assertFalse(coder.loop_running) # Loop should stop
+            self.assertIn("Output with SUCCESS", mock_simple_send.call_args[0][0][0]["content"])
+            self.assertFalse(coder.loop_running)  # Loop should stop
             self.assertEqual(coder.loop_iteration, 2)
 
     @patch("aider.coders.base_coder.Coder.send_message")
@@ -139,7 +143,8 @@ class TestLoopMode(unittest.TestCase):
             # Mock Coder.create and its run method to prevent actual execution
             with patch("aider.main.Coder.create") as mock_coder_create:
                 mock_coder_instance = MagicMock()
-                mock_coder_instance.loop_running = False # Start as not running
+                mock_coder_instance.loop_running = False  # Start as not running
+                # Create Commands *inside* the patch context using the mock coder
                 mock_coder_instance.commands = Commands(io, mock_coder_instance)
                 # Mock start_loop to check if it's called
                 mock_coder_instance.start_loop = MagicMock()
@@ -147,7 +152,8 @@ class TestLoopMode(unittest.TestCase):
 
                 # Call main with --loop argument
                 from aider.main import main
-                main(["--loop", "--exit"]) # --exit prevents entering the main loop
+
+                main(["--loop", "--exit"])  # --exit prevents entering the main loop
 
                 # Assert prompt_ask was called 3 times for configuration
                 self.assertEqual(io.prompt_ask.call_count, 3)

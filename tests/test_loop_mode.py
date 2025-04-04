@@ -52,13 +52,8 @@ class TestLoopMode(unittest.TestCase):
             # Mock LLM responses
             # 1. Initial task response (suggests edits)
             mock_send_message.return_value = iter([]) # Simulate no streaming output needed for test
-            # 2. Commit message, End condition check (NO), Commit message, End condition check (YES)
-            mock_simple_send.side_effect = [
-                "feat: Refactor code", # Commit msg 1
-                "NO",                  # End condition check 1
-                "fix: Address feedback", # Commit msg 2
-                "YES",                 # End condition check 2
-            ]
+            # 2. End condition check response (NO first, then YES) - Commit messages are mocked away
+            mock_simple_send.side_effect = ["NO", "YES"]
 
             # Mock apply_updates to return edited files
             mock_apply_updates.return_value = {"file1.py"}
@@ -70,8 +65,8 @@ class TestLoopMode(unittest.TestCase):
             ]
 
             # Start the loop configuration via command
-            # Also patch repo.get_diffs to simulate changes for auto_commit
-            with patch.object(coder.repo, 'get_diffs', return_value="dummy diff for commit") as mock_get_diffs:
+            # Also patch repo.commit to simulate successful auto_commit
+            with patch.object(coder.repo, 'commit', return_value=("dummy_hash", "dummy commit message")) as mock_repo_commit:
                 commands.cmd_loop("")
 
                 # Assert loop state is configured
@@ -92,34 +87,34 @@ class TestLoopMode(unittest.TestCase):
                 "python check_script.py", verbose=False, error_print=io.tool_error, cwd=coder.root
             )
             # Assertions for first iteration's end condition check
-            # simple_send is called for commit msg (call 1) and end condition (call 2)
-            end_condition_call_args = mock_simple_send.call_args_list[1][0][0] # Args of the second call
+            # simple_send is only called for end condition check now (call 0)
+            mock_repo_commit.assert_called_once() # Check that auto_commit happened
+            mock_simple_send.assert_called_once() # Only end condition check
+            end_condition_call_args = mock_simple_send.call_args_list[0][0][0] # Args of the first call
             self.assertEqual(end_condition_call_args[0]["role"], "user")
             self.assertIn("Output without SUCCESS", end_condition_call_args[0]["content"])
             self.assertIn("Does the output contain 'SUCCESS'?", end_condition_call_args[0]["content"])
             self.assertTrue(coder.loop_running) # Loop should continue
             self.assertEqual(coder.loop_iteration, 1)
-            # Ensure get_diffs was called by auto_commit
-            mock_get_diffs.assert_called()
 
             # --- Simulate second iteration ---
-            # Reset the mock for the second iteration's commit
-            mock_get_diffs.reset_mock()
+            # Reset mocks for the second iteration's commit and end condition check
+            mock_repo_commit.reset_mock()
+            mock_simple_send.reset_mock()
             coder.run_loop_iteration()
 
             # Assertions for second iteration
-            self.assertEqual(mock_send_message.call_count, 2) # Task sent twice
+            self.assertEqual(mock_send_message.call_count, 2)  # Task sent twice
             self.assertEqual(mock_apply_updates.call_count, 2) # Updates applied twice
             self.assertEqual(mock_run_cmd.call_count, 2)       # Command run twice
-            self.assertEqual(mock_simple_send.call_count, 4)   # Commit msg + End check, twice
+            self.assertEqual(mock_repo_commit.call_count, 1)   # Commit called once in 2nd iter
+            self.assertEqual(mock_simple_send.call_count, 1)   # End check called once in 2nd iter
 
-            # Check the second end condition call (4th call overall)
-            end_condition_call_args_2 = mock_simple_send.call_args_list[3][0][0]
+            # Check the second end condition call (1st call in 2nd iter)
+            end_condition_call_args_2 = mock_simple_send.call_args_list[0][0][0]
             self.assertIn("Output with SUCCESS", end_condition_call_args_2[0]["content"])
             self.assertFalse(coder.loop_running)  # Loop should stop
             self.assertEqual(coder.loop_iteration, 2)
-            # Ensure get_diffs was called again for the second commit
-            mock_get_diffs.assert_called()
 
     @patch("aider.coders.base_coder.Coder.send_message")
     @patch("aider.coders.base_coder.Coder.apply_updates")

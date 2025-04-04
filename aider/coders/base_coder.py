@@ -860,7 +860,7 @@ class Coder:
         if self.repo:
             self.commit_before_message.append(self.repo.get_head_commit_sha())
 
-    def start_loop(self, task, command, end_condition):
+    def start_loop(self, task, command, end_condition, auto_clear):
         """Configure and start the loop mode."""
         self.loop_task = task
         self.loop_command = command

@@ -70,10 +70,12 @@ class TestLoopMode(unittest.TestCase):
             ]
 
             # Start the loop configuration via command
-            commands.cmd_loop("")
+            # Also patch repo.get_diffs to simulate changes for auto_commit
+            with patch.object(coder.repo, 'get_diffs', return_value="dummy diff for commit") as mock_get_diffs:
+                commands.cmd_loop("")
 
-            # Assert loop state is configured
-            self.assertTrue(coder.loop_running)
+                # Assert loop state is configured
+                self.assertTrue(coder.loop_running)
             self.assertEqual(coder.loop_task, "Refactor this code")
             self.assertEqual(coder.loop_command, "python check_script.py")
             self.assertEqual(coder.loop_end_condition, "Does the output contain 'SUCCESS'?")
@@ -97,11 +99,14 @@ class TestLoopMode(unittest.TestCase):
             self.assertIn("Does the output contain 'SUCCESS'?", end_condition_call_args[0]["content"])
             self.assertTrue(coder.loop_running) # Loop should continue
             self.assertEqual(coder.loop_iteration, 1)
+            # Ensure get_diffs was called by auto_commit
+            mock_get_diffs.assert_called()
 
             # --- Simulate second iteration ---
+            # Reset the mock for the second iteration's commit
+            mock_get_diffs.reset_mock()
             coder.run_loop_iteration()
 
-            # Assertions for second iteration
             # Assertions for second iteration
             self.assertEqual(mock_send_message.call_count, 2) # Task sent twice
             self.assertEqual(mock_apply_updates.call_count, 2) # Updates applied twice
@@ -113,6 +118,8 @@ class TestLoopMode(unittest.TestCase):
             self.assertIn("Output with SUCCESS", end_condition_call_args_2[0]["content"])
             self.assertFalse(coder.loop_running)  # Loop should stop
             self.assertEqual(coder.loop_iteration, 2)
+            # Ensure get_diffs was called again for the second commit
+            mock_get_diffs.assert_called()
 
     @patch("aider.coders.base_coder.Coder.send_message")
     @patch("aider.coders.base_coder.Coder.apply_updates")

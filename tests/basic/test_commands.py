@@ -14,6 +14,7 @@ import pyperclip
 from aider.coders import Coder
 from aider.commands import Commands, SwitchCoder
 from aider.dump import dump  # noqa: F401
+from aider import prompts
 from aider.io import InputOutput
 from aider.models import Model
 from aider.repo import GitRepo

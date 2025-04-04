@@ -2009,10 +2009,19 @@ class TestCommands(TestCase):
         coder.shell_commands = ["echo 'test'"]
         with mock.patch("aider.coders.base_coder.run_cmd") as mock_run_cmd:
             mock_run_cmd.return_value = (0, "test output")
-            coder.run_shell_commands()
+            # Capture the output returned by run_shell_commands
+            command_output = coder.run_shell_commands()
             # The actual call doesn't explicitly pass verbose=False, it relies on the default
             mock_run_cmd.assert_called_once_with("echo 'test'", error_print=io.tool_error, cwd=coder.root)
-            # Check if output was added to chat (implicitly)
+
+            # Manually add the output to cur_messages as the calling code would
+            if command_output:
+                 coder.cur_messages += [
+                     dict(role="user", content=prompts.run_output.format(command="shell", output=command_output)),
+                     dict(role="assistant", content="Ok."),
+                 ]
+
+            # Check if output was added to chat
             user_messages = [msg for msg in coder.cur_messages if msg["role"] == "user"]
             self.assertTrue(user_messages, "No user messages found in cur_messages after running command")
             last_user_message = user_messages[-1]

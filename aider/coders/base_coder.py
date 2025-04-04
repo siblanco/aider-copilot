@@ -384,6 +384,7 @@ class Coder:
             self.done_messages = []
 
         self.io = io
+        self.io.berserk_mode = self.berserk_mode # Pass berserk mode to IO
 
         self.shell_commands = []
 

@@ -65,8 +65,8 @@ class TestLoopMode(unittest.TestCase):
             ]
 
             # Start the loop configuration via command
-            # Also patch repo.commit to simulate successful auto_commit
-            with patch.object(coder.repo, 'commit', return_value=("dummy_hash", "dummy commit message")) as mock_repo_commit:
+            # Also patch coder.auto_commit to check if it's called
+            with patch.object(coder, 'auto_commit', return_value=("dummy_hash", "dummy commit message")) as mock_auto_commit:
                 commands.cmd_loop("")
 
                 # Assert loop state is configured
@@ -88,7 +88,7 @@ class TestLoopMode(unittest.TestCase):
             )
             # Assertions for first iteration's end condition check
             # simple_send is only called for end condition check now (call 0)
-            mock_repo_commit.assert_called_once() # Check that auto_commit happened
+            mock_auto_commit.assert_called_once_with({'file1.py'}) # Check that auto_commit was called with edited files
             mock_simple_send.assert_called_once() # Only end condition check
             end_condition_call_args = mock_simple_send.call_args_list[0][0][0] # Args of the first call
             self.assertEqual(end_condition_call_args[0]["role"], "user")
@@ -99,7 +99,7 @@ class TestLoopMode(unittest.TestCase):
 
             # --- Simulate second iteration ---
             # Reset mocks for the second iteration's commit and end condition check
-            mock_repo_commit.reset_mock()
+            mock_auto_commit.reset_mock()
             mock_simple_send.reset_mock()
             coder.run_loop_iteration()
 
@@ -107,7 +107,7 @@ class TestLoopMode(unittest.TestCase):
             self.assertEqual(mock_send_message.call_count, 2)  # Task sent twice
             self.assertEqual(mock_apply_updates.call_count, 2) # Updates applied twice
             self.assertEqual(mock_run_cmd.call_count, 2)       # Command run twice
-            self.assertEqual(mock_repo_commit.call_count, 1)   # Commit called once in 2nd iter
+            self.assertEqual(mock_auto_commit.call_count, 1)   # Auto-commit called once in 2nd iter
             self.assertEqual(mock_simple_send.call_count, 1)   # End check called once in 2nd iter
 
             # Check the second end condition call (1st call in 2nd iter)

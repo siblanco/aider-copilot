@@ -787,6 +787,12 @@ def get_parser(default_config_files, git_root):
         "--editor",
         help="Specify which editor to use for the /editor command",
     )
+    group.add_argument(
+        "--berserk",
+        action="store_true",
+        help="Enable berserk mode: auto-accept all edits, file additions, and commands",
+        default=False,
+    )
 
     ##########
     group = parser.add_argument_group("Deprecated model settings")

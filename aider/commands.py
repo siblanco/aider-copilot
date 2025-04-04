@@ -36,9 +36,10 @@ class SwitchCoder(Exception):
 class Commands:
     voice = None
     scraper = None
+    berserk_mode = False
 
     def clone(self):
-        return Commands(
+        new_commands = Commands(
             self.io,
             None,
             voice_language=self.voice_language,
@@ -47,7 +48,9 @@ class Commands:
             parser=self.parser,
             verbose=self.verbose,
             editor=self.editor,
+            berserk_mode=self.berserk_mode,
         )
+        return new_commands
 
     def __init__(
         self,
@@ -62,10 +65,12 @@ class Commands:
         verbose=False,
         editor=None,
         original_read_only_fnames=None,
+        berserk_mode=False,
     ):
         self.io = io
         self.coder = coder
         self.parser = parser
+        self.berserk_mode = berserk_mode
         self.args = args
         self.verbose = verbose
 

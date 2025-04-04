@@ -323,9 +323,11 @@ class Coder:
         file_watcher=None,
         auto_copy_context=False,
         auto_accept_architect=True,
+        berserk_mode=False,
     ):
         # Fill in a dummy Analytics if needed, but it is never .enable()'d
         self.analytics = analytics if analytics is not None else Analytics()
+        self.berserk_mode = berserk_mode
 
         self.event = self.analytics.event
         self.chat_language = chat_language
@@ -940,9 +942,11 @@ class Coder:
         for url in urls:
             if url not in self.rejected_urls:
                 url = url.rstrip(".',\"")
-                if self.io.confirm_ask(
+                if self.berserk_mode or self.io.confirm_ask(
                     "Add URL to the chat?", subject=url, group=group, allow_never=True
                 ):
+                    if self.berserk_mode:
+                        self.io.tool_output(f"Berserk mode: Auto-adding URL: {url}")
                     inp += "\n\n"
                     inp += self.commands.cmd_web(url, return_content=True)
                 else:
@@ -1658,9 +1662,11 @@ class Coder:
         added_fnames = []
         group = ConfirmGroup(new_mentions)
         for rel_fname in sorted(new_mentions):
-            if self.io.confirm_ask(
+            if self.berserk_mode or self.io.confirm_ask(
                 "Add file to the chat?", subject=rel_fname, group=group, allow_never=True
             ):
+                if self.berserk_mode:
+                    self.io.tool_output(f"Berserk mode: Auto-adding file: {rel_fname}")
                 self.add_rel_fname(rel_fname)
                 added_fnames.append(rel_fname)
             else:
@@ -2070,11 +2076,13 @@ class Coder:
             return
 
         if not Path(full_path).exists():
-            if not self.io.confirm_ask("Create new file?", subject=path):
+            if not self.berserk_mode and not self.io.confirm_ask("Create new file?", subject=path):
                 self.io.tool_output(f"Skipping edits to {path}")
                 return
 
             if not self.dry_run:
+                if self.berserk_mode:
+                    self.io.tool_output(f"Berserk mode: Auto-creating file: {path}")
                 if not utils.touch_file(full_path):
                     self.io.tool_error(f"Unable to create {path}, skipping edits.")
                     return
@@ -2319,7 +2327,8 @@ class Coder:
             1 for cmd in commands if cmd.strip() and not cmd.strip().startswith("#")
         )
         prompt = "Run shell command?" if command_count == 1 else "Run shell commands?"
-        if not self.io.confirm_ask(
+
+        if not self.berserk_mode and not self.io.confirm_ask(
             prompt,
             subject="\n".join(commands),
             explicit_yes_required=True,
@@ -2327,6 +2336,9 @@ class Coder:
             allow_never=True,
         ):
             return
+
+        if self.berserk_mode:
+            self.io.tool_output(f"Berserk mode: Auto-running command(s):\n{' '.join(commands)}")
 
         accumulated_output = ""
         for command in commands:
@@ -2342,10 +2354,17 @@ class Coder:
             if output:
                 accumulated_output += f"Output from {command}\n{output}\n"
 
-        if accumulated_output.strip() and self.io.confirm_ask(
-            "Add command output to the chat?", allow_never=True
-        ):
-            num_lines = len(accumulated_output.strip().splitlines())
-            line_plural = "line" if num_lines == 1 else "lines"
+        if accumulated_output.strip():
+            if self.berserk_mode:
+                self.io.tool_output("Berserk mode: Auto-adding command output to chat.")
+                add_output_to_chat = True
+            else:
+                add_output_to_chat = self.io.confirm_ask(
+                    "Add command output to the chat?", allow_never=True
+                )
+
+            if add_output_to_chat:
+                num_lines = len(accumulated_output.strip().splitlines())
+                line_plural = "line" if num_lines == 1 else "lines"
             self.io.tool_output(f"Added {num_lines} {line_plural} of output to the chat.")
             return accumulated_output

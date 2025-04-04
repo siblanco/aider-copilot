@@ -361,6 +361,7 @@ class InputOutput:
 
         self.file_watcher = file_watcher
         self.root = root
+        self.berserk_mode = False # Will be updated by Coder/Commands
 
         # Validate color settings after console is initialized
         self._validate_color_settings()
@@ -802,10 +803,16 @@ class InputOutput:
         group=None,
         allow_never=False,
     ):
-        self.num_user_asks += 1
-
         # Ring the bell if needed
         self.ring_bell()
+
+        if self.berserk_mode:
+            self.tool_output(f"Berserk mode: Auto-accepting: {question}")
+            if subject:
+                self.tool_output(subject, bold=True)
+            return True
+
+        self.num_user_asks += 1
 
         question_id = (question, subject)
 

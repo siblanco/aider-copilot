@@ -30,6 +30,8 @@ class TestLoopMode(unittest.TestCase):
             # Setup IO and Coder
             io = InputOutput(pretty=False, yes=True) # Use yes=True for auto-apply
             coder = Coder.create(self.GPT35, "diff", io=io)
+            # Explicitly enable auto-commit for the test
+            coder.auto_commit_after_apply = True
             commands = Commands(io, coder)
 
             # Create and commit file1.py so auto_commit works

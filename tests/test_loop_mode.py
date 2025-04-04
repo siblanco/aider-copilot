@@ -88,18 +88,18 @@ class TestLoopMode(unittest.TestCase):
             mock_run_cmd.assert_called_with(
                 "python check_script.py", verbose=False, error_print=io.tool_error, cwd=coder.root
             )
-                # Assertions for first iteration's end condition check
-                # simple_send is only called for end condition check now (call 0)
-                mock_auto_commit.assert_called_once_with({'file1.py'}) # Check that auto_commit was called with edited files
-                mock_simple_send.assert_called_once() # Only end condition check
-                end_condition_call_args = mock_simple_send.call_args_list[0][0][0] # Args of the first call
-                self.assertEqual(end_condition_call_args[0]["role"], "user")
+            # Assertions for first iteration's end condition check
+            # simple_send is only called for end condition check now (call 0)
+            mock_auto_commit.assert_called_once_with({'file1.py'}) # Check that auto_commit was called with edited files
+            mock_simple_send.assert_called_once() # Only end condition check
+            end_condition_call_args = mock_simple_send.call_args_list[0][0][0] # Args of the first call
+            self.assertEqual(end_condition_call_args[0]["role"], "user")
             self.assertIn("Output without SUCCESS", end_condition_call_args[0]["content"])
             self.assertIn("Does the output contain 'SUCCESS'?", end_condition_call_args[0]["content"])
-                self.assertTrue(coder.loop_running) # Loop should continue
-                self.assertEqual(coder.loop_iteration, 1)
+            self.assertTrue(coder.loop_running) # Loop should continue
+            self.assertEqual(coder.loop_iteration, 1)
 
-                # --- Simulate second iteration ---
+            # --- Simulate second iteration ---
                 # Reset mocks for the second iteration's commit and end condition check
                 mock_auto_commit.reset_mock()
                 mock_simple_send.reset_mock()

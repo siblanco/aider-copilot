@@ -100,23 +100,23 @@ class TestLoopMode(unittest.TestCase):
             self.assertEqual(coder.loop_iteration, 1)
 
             # --- Simulate second iteration ---
-                # Reset mocks for the second iteration's commit and end condition check
-                mock_auto_commit.reset_mock()
-                mock_simple_send.reset_mock()
-                coder.run_loop_iteration()
+            # Reset mocks for the second iteration's commit and end condition check
+            mock_auto_commit.reset_mock()
+            mock_simple_send.reset_mock()
+            coder.run_loop_iteration()
 
-                # Assertions for second iteration
-                self.assertEqual(mock_send_message.call_count, 2)  # Task sent twice
-                self.assertEqual(mock_apply_updates.call_count, 2) # Updates applied twice
-                self.assertEqual(mock_run_cmd.call_count, 2)       # Command run twice
-                self.assertEqual(mock_auto_commit.call_count, 1)   # Auto-commit called once in 2nd iter
-                self.assertEqual(mock_simple_send.call_count, 1)   # End check called once in 2nd iter
+            # Assertions for second iteration
+            self.assertEqual(mock_send_message.call_count, 2)  # Task sent twice
+            self.assertEqual(mock_apply_updates.call_count, 2) # Updates applied twice
+            self.assertEqual(mock_run_cmd.call_count, 2)       # Command run twice
+            self.assertEqual(mock_auto_commit.call_count, 1)   # Auto-commit called once in 2nd iter
+            self.assertEqual(mock_simple_send.call_count, 1)   # End check called once in 2nd iter
 
-                # Check the second end condition call (1st call in 2nd iter)
-                end_condition_call_args_2 = mock_simple_send.call_args_list[0][0][0]
-                self.assertIn("Output with SUCCESS", end_condition_call_args_2[0]["content"])
-                self.assertFalse(coder.loop_running)  # Loop should stop
-                self.assertEqual(coder.loop_iteration, 2)
+            # Check the second end condition call (1st call in 2nd iter)
+            end_condition_call_args_2 = mock_simple_send.call_args_list[0][0][0]
+            self.assertIn("Output with SUCCESS", end_condition_call_args_2[0]["content"])
+            self.assertFalse(coder.loop_running)  # Loop should stop
+            self.assertEqual(coder.loop_iteration, 2)
 
     @patch("aider.coders.base_coder.Coder.send_message")
     @patch("aider.coders.base_coder.Coder.apply_updates")

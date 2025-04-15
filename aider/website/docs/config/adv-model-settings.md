@@ -569,6 +569,14 @@ cog.out("```\n")
   extra_params:
     max_tokens: 128000
 
+- name: fireworks_ai/accounts/fireworks/models/deepseek-v3-0324
+  edit_format: diff
+  use_repo_map: true
+  reminder: sys
+  examples_as_sys_msg: true
+  extra_params:
+    max_tokens: 160000
+
 - name: fireworks_ai/accounts/fireworks/models/qwq-32b
   edit_format: diff
   weak_model_name: fireworks_ai/accounts/fireworks/models/qwen2p5-coder-32b-instruct
@@ -612,6 +620,12 @@ cog.out("```\n")
 
 - name: gemini/gemini-2.5-pro-exp-03-25
   edit_format: diff-fenced
+  weak_model_name: gemini/gemini-2.0-flash
+  use_repo_map: true
+
+- name: gemini/gemini-2.5-pro-preview-03-25
+  edit_format: diff-fenced
+  weak_model_name: gemini/gemini-2.0-flash
   use_repo_map: true
 
 - name: gemini/gemini-exp-1114
@@ -700,6 +714,18 @@ cog.out("```\n")
 - name: gpt-4-vision-preview
   edit_format: diff
   weak_model_name: gpt-4o-mini
+  use_repo_map: true
+  reminder: sys
+
+- name: gpt-4.1
+  edit_format: diff
+  weak_model_name: gpt-4.1-mini
+  use_repo_map: true
+  reminder: sys
+  editor_model_name: gpt-4.1-mini
+
+- name: gpt-4.1-mini
+  edit_format: diff
   use_repo_map: true
   reminder: sys
 
@@ -799,6 +825,18 @@ cog.out("```\n")
   system_prompt_prefix: 'Formatting re-enabled. '
   accepts_settings:
   - reasoning_effort
+
+- name: openai/gpt-4.1
+  edit_format: diff
+  weak_model_name: openai/gpt-4.1-mini
+  use_repo_map: true
+  reminder: sys
+  editor_model_name: openai/gpt-4.1-mini
+
+- name: openai/gpt-4.1-mini
+  edit_format: diff
+  use_repo_map: true
+  reminder: sys
 
 - name: openai/gpt-4.5-preview
   edit_format: diff
@@ -962,8 +1000,6 @@ cog.out("```\n")
   weak_model_name: openrouter/deepseek/deepseek-chat-v3-0324:free
   use_repo_map: true
   examples_as_sys_msg: true
-  extra_params:
-    max_tokens: 131072
   caches_by_default: true
   use_temperature: false
   editor_model_name: openrouter/deepseek/deepseek-r1:free
@@ -1022,6 +1058,7 @@ cog.out("```\n")
 
 - name: openrouter/google/gemini-2.5-pro-exp-03-25:free
   edit_format: diff-fenced
+  weak_model_name: openrouter/google/gemini-2.0-flash-exp:free
   use_repo_map: true
 
 - name: openrouter/google/gemma-3-27b-it
@@ -1034,6 +1071,18 @@ cog.out("```\n")
   edit_format: diff
   weak_model_name: openrouter/meta-llama/llama-3-70b-instruct
   examples_as_sys_msg: true
+
+- name: openrouter/openai/gpt-4.1
+  edit_format: diff
+  weak_model_name: openrouter/openai/gpt-4.1-mini
+  use_repo_map: true
+  reminder: sys
+  editor_model_name: openrouter/openai/gpt-4.1-mini
+
+- name: openrouter/openai/gpt-4.1-mini
+  edit_format: diff
+  use_repo_map: true
+  reminder: sys
 
 - name: openrouter/openai/gpt-4o
   edit_format: diff
@@ -1097,12 +1146,40 @@ cog.out("```\n")
   accepts_settings:
   - reasoning_effort
 
+- name: openrouter/openrouter/optimus-alpha
+  edit_format: diff
+  use_repo_map: true
+  examples_as_sys_msg: true
+
+- name: openrouter/openrouter/quasar-alpha
+  edit_format: diff
+  use_repo_map: true
+  examples_as_sys_msg: true
+
 - name: openrouter/qwen/qwen-2.5-coder-32b-instruct
   edit_format: diff
   weak_model_name: openrouter/qwen/qwen-2.5-coder-32b-instruct
   use_repo_map: true
   editor_model_name: openrouter/qwen/qwen-2.5-coder-32b-instruct
   editor_edit_format: editor-diff
+
+- name: openrouter/x-ai/grok-3-beta
+  edit_format: diff
+  use_repo_map: true
+
+- name: openrouter/x-ai/grok-3-fast-beta
+  edit_format: diff
+  use_repo_map: true
+
+- name: openrouter/x-ai/grok-3-mini-beta
+  use_repo_map: true
+  accepts_settings:
+  - reasoning_effort
+
+- name: openrouter/x-ai/grok-3-mini-fast-beta
+  use_repo_map: true
+  accepts_settings:
+  - reasoning_effort
 
 - name: vertex_ai-anthropic_models/vertex_ai/claude-3-7-sonnet@20250219
   edit_format: diff
@@ -1169,9 +1246,31 @@ cog.out("```\n")
   edit_format: diff-fenced
   use_repo_map: true
 
+- name: vertex_ai/gemini-2.5-pro-preview-03-25
+  edit_format: diff-fenced
+  use_repo_map: true
+
 - name: vertex_ai/gemini-pro-experimental
   edit_format: diff-fenced
   use_repo_map: true
+
+- name: xai/grok-3-beta
+  edit_format: diff
+  use_repo_map: true
+
+- name: xai/grok-3-fast-beta
+  edit_format: diff
+  use_repo_map: true
+
+- name: xai/grok-3-mini-beta
+  use_repo_map: true
+  accepts_settings:
+  - reasoning_effort
+
+- name: xai/grok-3-mini-fast-beta
+  use_repo_map: true
+  accepts_settings:
+  - reasoning_effort
 ```
 <!--[[[end]]]-->
 

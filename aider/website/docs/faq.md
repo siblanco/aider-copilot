@@ -264,9 +264,16 @@ tr:hover { background-color: #f5f5f5; }
 </style>
 <table>
 <tr><th>Model Name</th><th class='right'>Total Tokens</th><th class='right'>Percent</th></tr>
-<tr><td>gemini/gemini-2.5-pro-exp-03-25</td><td class='right'>1,589,885</td><td class='right'>79.3%</td></tr>
-<tr><td>anthropic/claude-3-7-sonnet-20250219</td><td class='right'>416,047</td><td class='right'>20.7%</td></tr>
+<tr><td>gemini/gemini-2.5-pro-exp-03-25</td><td class='right'>4,027,983</td><td class='right'>88.1%</td></tr>
+<tr><td>openrouter/anthropic/claude-3.7-sonnet</td><td class='right'>518,708</td><td class='right'>11.3%</td></tr>
+<tr><td>gpt-4.1-mini</td><td class='right'>11,775</td><td class='right'>0.3%</td></tr>
+<tr><td>gpt-4.1</td><td class='right'>10,687</td><td class='right'>0.2%</td></tr>
+<tr><td>openrouter/REDACTED</td><td class='right'>2,058</td><td class='right'>0.0%</td></tr>
 </table>
+
+{: .note :}
+Some models show as REDACTED, because they are new or unpopular models.
+Aider's analytics only records the names of "well known" LLMs.
 <!--[[[end]]]-->
 
 ## How are the "aider wrote xx% of code" stats computed?
@@ -278,6 +285,16 @@ The
 by doing something like `git blame` on the repo,
 and counting up who wrote all the new lines of code in each release.
 Only lines in source code files are counted, not documentation or prompt files.
+
+## Why did aider ignore/discard its proposed edits after it asked to add a new file to the chat?
+
+If aider prompts you to add a new file to the chat and you say yes,
+it will re-submit the original request. 
+The fact that the LLM's reply indicated that it needed to see another file (and you said yes)
+is often a sign that the LLM should have been able to see/edit that file in the first place. 
+Without access to it, there is increased chance that it's done a bad implementation of the requested change.
+Often LLMs will hallucinate content for the files they needed but didn't have.
+So aider re-submits the original request in this situation.
 
 ## Why does aider sometimes stop highlighting code in its replies?
 
